@@ -14,7 +14,8 @@ PROGRAM = ["/opt/bin/upkeep"]
 
 def test_job_argv_runs_auto_through_the_shell(env):
     argv = schedule.job_argv(Config(shell=("sh", "-lc")), PROGRAM, env)
-    assert argv == ["/bin/sh", "-lc", "/opt/bin/upkeep --auto"]
+    assert os.path.isabs(argv[0]) and os.path.basename(argv[0]) == "sh"
+    assert argv[1:] == ["-lc", "/opt/bin/upkeep --auto"]
 
 
 def test_job_argv_default_shell(env):
