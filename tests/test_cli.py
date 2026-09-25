@@ -156,12 +156,45 @@ def test_status(up, write_config, state):
     code, out, _ = up("status")
     assert code == 0
     lines = out.splitlines()
-    assert lines[0].split() == ["TOOL", "STATUS", "WHEN", "TOOK", "DETAIL"]
+    assert lines[0].split() == ["TOOL", "STATUS", "WHEN", "TOOK", "VERSION", "DETAIL"]
     assert lines[1].split()[:2] == ["good", "ok"]
     assert lines[2].split()[:2] == ["bad", "failed"]
-    assert "exit 1" in lines[2]
+    assert lines[2].rstrip().endswith("exit 1")
     assert lines[3].split() == ["manual", "never"]
+    assert "\x1b[" not in out
     assert not state.notice.exists()
+
+
+def test_status_version_column(up, write_config, tmp_path):
+    ver = tmp_path / "ver"
+    ver.write_text("tool 1.0\n")
+    write_config(
+        f"""
+[tools.bump]
+run = "echo 'tool 1.1' > {ver}"
+version = "cat {ver}"
+[tools.same]
+run = "true"
+version = "echo 'same 2.3.4 (build x)'"
+[tools.broken]
+run = "exit 2"
+version = "echo 'broken 0.9'"
+[tools.plain]
+run = "true"
+"""
+    )
+    up("bump", "same", "broken", "plain")
+    _, out, _ = up("status")
+    lines = out.splitlines()
+    header = lines[0]
+    col = header.index("VERSION")
+    detail = header.index("DETAIL")
+    rows = {line.split()[0]: line for line in lines[1:5]}
+    assert rows["bump"][col:detail].strip() == "1.0 → 1.1"
+    assert rows["same"][col:detail].strip() == "2.3.4"
+    assert rows["broken"][col:detail].strip() == "0.9"
+    assert rows["broken"][detail:].strip() == "exit 2"
+    assert rows["plain"][col:].strip() == ""
 
 
 def test_status_brief_ok(up, write_config):

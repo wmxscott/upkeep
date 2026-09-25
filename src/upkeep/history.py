@@ -15,6 +15,7 @@ from typing import Any
 from upkeep import paths
 
 RUN_ID_FORMAT = "%Y%m%dT%H%M%SZ"
+VERSION_RE = re.compile(r"\d+(?:\.\d+)+(?:[-+][0-9A-Za-z.]+)?")
 ANSI_RE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b[@-Z\\-_]")
 
 
@@ -25,6 +26,15 @@ def strip_ansi(text: str) -> str:
         text = text.rstrip("\r")
         text = text[text.rfind("\r") + 1 :]
     return text
+
+
+def short_version(text: str) -> str:
+    """The version number in a `version` command's output, else the text itself."""
+    m = VERSION_RE.search(text)
+    if m:
+        return m[0]
+    text = text.strip()
+    return text if len(text) <= 24 else text[:23] + "…"
 
 
 def utcnow() -> datetime:
@@ -62,10 +72,17 @@ class ToolRecord:
 
     @property
     def version_change(self) -> str | None:
+        """`1.0 → 1.1` when the version changed."""
         before, after = self.version_before, self.version_after
-        if before and after and before != after:
-            return f"{before} → {after}"
+        if before and after and short_version(before) != short_version(after):
+            return f"{short_version(before)} → {short_version(after)}"
         return None
+
+    @property
+    def version(self) -> str:
+        """For display: the change, else the latest known version, else blank."""
+        latest = self.version_after or self.version_before
+        return self.version_change or (short_version(latest) if latest else "")
 
 
 @dataclass

@@ -365,17 +365,17 @@ def cmd_status(ctx: Ctx, argv: list[str]) -> int:
         return 0
 
     s = ctx.style
-    rows = [["TOOL", "STATUS", "WHEN", "TOOK", "DETAIL"]]
+    rows = [["TOOL", "STATUS", "WHEN", "TOOK", "VERSION", "DETAIL"]]
     for name in cfg.tools:
         if name not in latest:
-            rows.append([name, "never", "", "", ""])
+            rows.append([name, "never", "", "", "", ""])
             continue
         run, rec = latest[name]
         started = rec.started_at or run.started_at
         took = format_duration(rec.duration) if rec.duration is not None else ""
-        detail = rec.version_change or ("" if rec.status == "ok" else rec.reason or "")
+        detail = "" if rec.status == "ok" else rec.reason or ""
         trig = " (auto)" if run.trigger == "auto" else ""
-        rows.append([name, statuses[name], ago(started) + trig, took, detail])
+        rows.append([name, statuses[name], ago(started) + trig, took, rec.version, detail])
     colors = {"ok": s.ok, "failed": s.bad, "interrupted": s.bad, "skipped": s.warn}
 
     def paint(col: int, text: str) -> str:

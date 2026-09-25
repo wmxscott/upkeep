@@ -107,7 +107,7 @@ def test_version_change_recorded(state, recorder, env, tmp_path):
     tool = Tool("x", f"echo 'tool 1.1' > {ver}", version=f"cat {ver}")
     rec = make_runner(state, recorder, env).execute([tool]).tools["x"]
     assert (rec.version_before, rec.version_after) == ("tool 1.0", "tool 1.1")
-    assert rec.version_change == "tool 1.0 → tool 1.1"
+    assert rec.version_change == "1.0 → 1.1"
 
 
 def test_log_and_run_json(state, recorder, env):

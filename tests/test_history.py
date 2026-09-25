@@ -25,6 +25,25 @@ def test_strip_ansi():
     assert strip_ansi("line\r") == "line"
 
 
+def test_short_version():
+    assert history.short_version("Homebrew 4.6.3") == "4.6.3"
+    assert history.short_version("rustc 1.90.0 (1159e78c4 2025-09-14)") == "1.90.0"
+    assert history.short_version("gh version 2.101.0 (2026-09-15)") == "2.101.0"
+    assert history.short_version("v1.3.12-canary.4") == "1.3.12-canary.4"
+    assert history.short_version("  nightly build  ") == "nightly build"
+    assert history.short_version("x" * 40) == "x" * 23 + "…"
+
+
+def test_version_display():
+    assert ToolRecord("ok", version_before="t 1.0", version_after="t 1.1").version == "1.0 → 1.1"
+    assert ToolRecord("ok", version_before="t 1.0", version_after="t 1.0").version == "1.0"
+    assert ToolRecord("failed", version_before="t 1.0").version == "1.0"
+    assert ToolRecord("ok").version == ""
+    # Same number, different build text: no change to report.
+    same = ToolRecord("ok", version_before="t 1.0 (a)", version_after="t 1.0 (b)")
+    assert same.version_change is None and same.version == "1.0"
+
+
 def test_latest_per_tool(state):
     make_run(state, NOW - timedelta(days=2), a="failed", b="ok")
     make_run(state, NOW - timedelta(days=1), a="ok")
