@@ -36,6 +36,18 @@ PRESETS: dict[str, dict[str, Any]] = {
         "version": "npm --version",
         "check": "npm outdated -g --parseable || true",
     },
+    "pnpm": {
+        "run": "pnpm self-update && pnpm update --global",
+        "requires": "pnpm",
+        "lock": "pnpm",
+        "version": "pnpm --version",
+    },
+    "bun": {
+        "run": "bun upgrade && bun update --global",
+        "requires": "bun",
+        "lock": "bun",
+        "version": "bun --version",
+    },
     "uv": {
         "run": "uv tool upgrade --all",
         "requires": "uv",

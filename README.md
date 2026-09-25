@@ -4,7 +4,7 @@
 
 Keep your tools up to date. `up` runs the update commands you list in a TOML file: the ones you pick, all of them in parallel, or, from an hourly job, the ones you've opted in that are due.
 
-"Update everything" scripts tend to fail quietly when nobody is watching: a cask wants sudo, a git remote wants an SSH key touch, a CLI isn't logged in, two tools run `brew` at once. upkeep is built around that. Nothing runs unattended unless you mark it `auto`, tools that share a package manager take turns, every run is logged, and failures leave a one-line notice for your next shell. [topgrade](https://github.com/topgrade-rs/topgrade) is the big prior art and knows hundreds of tools. upkeep knows nine presets and runs whatever else you tell it to: small, and config first.
+"Update everything" scripts tend to fail quietly when nobody is watching: a cask wants sudo, a git remote wants an SSH key touch, a CLI isn't logged in, two tools run `brew` at once. upkeep is built around that. Nothing runs unattended unless you mark it `auto`, tools that share a package manager take turns, every run is logged, and failures leave a one-line notice for your next shell. [topgrade](https://github.com/topgrade-rs/topgrade) is the big prior art and knows hundreds of tools. upkeep knows eleven presets and runs whatever else you tell it to: small, and config first.
 
 ## Install
 
@@ -70,7 +70,7 @@ run = "cd ~/dotfiles && git pull"   # an SSH remote: better kept manual
 | `auto` | `false` | Run by `up --auto`, which is what the schedule runs |
 | `lock` | | Tools with the same lock never run at once, in this or any other `up` process |
 | `requires` | | An executable, or a list. When one isn't on `PATH`, the tool is skipped rather than failed |
-| `version` | | A command that prints the version on its first line. Recorded before and after, so you see what changed |
+| `version` | | A command that prints the version on its first line. Recorded before and after; `up status` shows the version number, or `1.0 → 1.1` when a run changed it |
 | `check` | | What `up check` runs. It should print one line per outdated item and nothing otherwise |
 | `interval` | `"daily"` | `"daily"`, `"weekly"`, `"<n>h"` or `"<n>d"`. Only `--auto` uses it |
 | `timeout` | `"1h"` | `"90s"`, `"30m"`, `"2h"`, or `0` for none. The whole process group is killed |
@@ -90,6 +90,8 @@ The older `up` script's config, `~/.config/up/up.toml`, still works: each `name 
 | `brew-cask` | `brew update && brew upgrade --cask` | `brew` | `brew outdated --cask` |
 | `mise` | `mise upgrade` | `mise` | `mise outdated --no-header` |
 | `npm` | `npm update -g` | `npm` | `npm outdated -g --parseable` |
+| `pnpm` | `pnpm self-update && pnpm update --global` | `pnpm` | |
+| `bun` | `bun upgrade && bun update --global` | `bun` | |
 | `uv` | `uv tool upgrade --all` | `uv` | |
 | `pipx` | `pipx upgrade-all` | `pipx` | |
 | `rustup` | `rustup update` | `rustup` | `rustup check`, updates only |
@@ -97,6 +99,8 @@ The older `up` script's config, `~/.config/up/up.toml`, still works: each `name 
 | `gh-extensions` | `gh extension upgrade --all` | | `gh extension upgrade --all --dry-run` |
 
 Each preset also sets `requires`, and most set `version`. `brew` leaves casks alone on purpose: casks often need sudo, which an unattended run can't provide. Keep `brew-cask` manual.
+
+`pnpm` and `bun` update themselves as well as their global packages. If Homebrew, corepack or mise installed them, let that manager do the self-update and override `run` with just `pnpm update --global` or `bun update --global`.
 
 ## Commands
 
@@ -116,6 +120,16 @@ Each preset also sets `requires`, and most set `version`. `brew` leaves casks al
 | `up init [--force] [--print]` | Write a starter config |
 | `up schedule install\|remove\|status [--dry-run]` | Manage the hourly job |
 | `up --version` | |
+
+```
+$ up status
+TOOL      STATUS   WHEN           TOOK  VERSION        DETAIL
+brew      ok       3h ago (auto)  41s   4.6.3 → 4.6.4
+mise      ok       3h ago (auto)  12s   2026.9.1
+claude    failed   3h ago (auto)  2s    1.0.72         exit 1
+cargo     skipped  3h ago (auto)                       cargo-install-update not found
+dotfiles  never
+```
 
 A run exits 1 if any tool failed, 2 on a usage or config error, and 130 when interrupted. In a terminal each tool gets one live status line, and only failures show output: their last 20 lines and the log's path. When piped, or with `-v`, every line is printed with its tool's prefix. `NO_COLOR` turns colour off.
 
