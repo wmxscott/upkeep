@@ -25,6 +25,7 @@ DURATION_RE = re.compile(r"^(\d+)([smhd])$")
 INTERVAL_RE = re.compile(r"^(\d+)([hd])$")
 UNITS = {"s": 1, "m": 60, "h": 3600, "d": 86400}
 NOTIFY = ("failure", "always", "never")
+POSIX_SHELLS = ("sh", "bash", "zsh", "dash", "ksh", "mksh", "yash")
 DEFAULT_TIMEOUT = 3600.0
 TOOL_KEYS = (
     "preset",
@@ -96,13 +97,21 @@ class Config:
     legacy: bool = False
 
     def shell_words(self, env: Mapping[str, str] = os.environ) -> tuple[str, ...]:
-        """How commands are launched: the command string is appended as one argument."""
+        """How commands are launched: the command string is appended as one argument.
+
+        Defaults to a login `$SHELL` when it speaks POSIX sh, since presets and
+        the PATH probe rely on that syntax.
+        """
         if self.shell:
             return self.shell
         user_shell = env.get("SHELL", "")
-        if user_shell.startswith("/") and os.access(user_shell, os.X_OK):
+        if (
+            user_shell.startswith("/")
+            and os.path.basename(user_shell) in POSIX_SHELLS
+            and os.access(user_shell, os.X_OK)
+        ):
             return (user_shell, "-lc")
-        return ("/bin/sh", "-c")
+        return ("/bin/sh", "-lc")
 
 
 def parse_duration(value: Any) -> float | None:

@@ -298,3 +298,12 @@ def test_schedule_install_applies(up, write_config, monkeypatch, fake_exec, env)
 
 def test_version_string():
     assert __version__.count(".") == 2
+
+
+def test_schedule_log_is_trimmed(tmp_path):
+    log = tmp_path / "schedule.log"
+    log.write_bytes(b"old line\n" * 200_000)
+    cli._trim(log)
+    data = log.read_bytes()
+    assert len(data) <= cli.SCHEDULE_LOG_KEEP
+    assert data.startswith(b"old line\n")

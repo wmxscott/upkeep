@@ -76,7 +76,7 @@ run = "cd ~/dotfiles && git pull"   # an SSH remote: better kept manual
 | `timeout` | `"1h"` | `"90s"`, `"30m"`, `"2h"`, or `0` for none. The whole process group is killed |
 | `env` | | Extra environment variables, as a table |
 
-Commands run through `shell` (default: your `$SHELL -lc`, so they see your login `PATH`), with stdin closed and in their own process group. A tool named like a command (`status`, `log`, …) runs with `up run <name>`.
+Commands run through `shell`, with stdin closed and in their own process group. The default is your `$SHELL -lc`, so they see your login `PATH`, when that shell speaks POSIX sh (sh, bash, zsh, dash, ksh); otherwise it's `/bin/sh -lc`. A tool named like a command (`status`, `log`, …) runs with `up run <name>`.
 
 Unknown keys and bad values are errors in `up doctor`. Everywhere else they're warnings, and the default is used.
 

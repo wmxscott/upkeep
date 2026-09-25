@@ -124,9 +124,12 @@ def test_log_and_run_json(state, recorder, env):
     assert x["started"].endswith("Z") and x["duration"] >= 0
 
 
-def test_background_process_holding_the_pipe_does_not_hang(state, recorder, env):
+def test_background_process_holding_the_pipe_does_not_hang(state, recorder, env, tmp_path):
+    pidfile = tmp_path / "pid"
     t0 = time.monotonic()
-    run = make_runner(state, recorder, env).execute([Tool("x", "sleep 20 & echo started")])
+    tool = Tool("x", f"sleep 20 & echo $! > {pidfile}; echo started")
+    run = make_runner(state, recorder, env).execute([tool])
+    os.kill(int(pidfile.read_text()), 15)
     assert time.monotonic() - t0 < 10
     assert run.tools["x"].status == "ok"
 

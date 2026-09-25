@@ -139,7 +139,8 @@ def test_durations_and_intervals():
 
 def test_shell_words_default(env):
     assert config.Config().shell_words(env) == ("/bin/sh", "-lc")
-    assert config.Config().shell_words({}) == ("/bin/sh", "-c")
+    assert config.Config().shell_words({}) == ("/bin/sh", "-lc")
+    assert config.Config().shell_words({"SHELL": "/usr/bin/fish"}) == ("/bin/sh", "-lc")
     assert config.Config(shell=("zsh", "-lic")).shell_words(env) == ("zsh", "-lic")
 
 
