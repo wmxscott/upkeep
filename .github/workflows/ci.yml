@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv run ruff check
+      - run: uv run ruff format --check
+
+  test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Test on Python 3.11
+        run: uv run --python 3.11 pytest
+      - name: Test on Python 3.14
+        run: uv run --python 3.14 pytest
+      - name: Smoke test
+        run: |
+          uv run up --version
+          uv run upkeep --help
+          export XDG_CONFIG_HOME="$RUNNER_TEMP/config" XDG_STATE_HOME="$RUNNER_TEMP/state"
+          mkdir -p "$XDG_CONFIG_HOME/upkeep"
+          printf '[schedule]\nshell = "/bin/sh -c"\n[tools.hello]\nrun = "echo hello"\n' \
+            > "$XDG_CONFIG_HOME/upkeep/config.toml"
+          uv run up hello
+          uv run up status
+          uv run up doctor
+          uv run up schedule install --dry-run
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
