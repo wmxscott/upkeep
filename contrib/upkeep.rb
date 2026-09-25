@@ -1,13 +1,11 @@
-# Draft formula for wmxscott/homebrew-tap. Fill in url and sha256 once v1.0.0 is tagged:
-#   curl -sL https://github.com/wmxscott/upkeep/archive/refs/tags/v1.0.0.tar.gz | shasum -a 256
-# Resource versions and hashes come from uv.lock.
+# Mirrors Formula/upkeep.rb in https://github.com/wmxscott/homebrew-tap; change both together.
 class Upkeep < Formula
   include Language::Python::Virtualenv
 
   desc "Run your update commands in parallel, on demand or on a catch-up schedule"
   homepage "https://github.com/wmxscott/upkeep"
   url "https://github.com/wmxscott/upkeep/archive/refs/tags/v1.0.0.tar.gz"
-  sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+  sha256 "748a3acb43a8dfc60c554af78dc14473c2a5674ce0a78f3a50c23278393148b3"
   license "MIT"
   head "https://github.com/wmxscott/upkeep.git", branch: "main"
 
@@ -39,27 +37,29 @@ class Upkeep < Formula
   def caveats
     <<~EOS
       Write a starter config, then schedule the tools you mark auto = true:
-        upkeep init
-        upkeep schedule install
+        up init
+        up schedule install
     EOS
   end
 
   test do
     assert_match "upkeep #{version}", shell_output("#{bin}/up --version")
     assert_match "upkeep #{version}", shell_output("#{bin}/upkeep --version")
+    assert_match "[schedule]", shell_output("#{bin}/up init --print")
 
-    ENV["XDG_CONFIG_HOME"] = testpath/"config"
+    ENV["UPKEEP_CONFIG"] = testpath/"upkeep.toml"
     ENV["XDG_STATE_HOME"] = testpath/"state"
-    (testpath/"config/upkeep/config.toml").write <<~TOML
+    (testpath/"upkeep.toml").write <<~TOML
       [schedule]
       shell = "/bin/sh -c"
       [tools.hello]
       run = "echo hello from upkeep"
     TOML
 
-    assert_match "hello from upkeep", shell_output("#{bin}/upkeep hello")
-    assert_match(/hello\s+ok/, shell_output("#{bin}/upkeep status"))
-    assert_match "hello from upkeep", shell_output("#{bin}/upkeep log hello")
-    shell_output("#{bin}/upkeep nope", 2)
+    assert_match "hello", shell_output("#{bin}/up list")
+    assert_match "hello from upkeep", shell_output("#{bin}/up hello")
+    assert_match(/hello\s+ok/, shell_output("#{bin}/up status"))
+    assert_match "hello from upkeep", shell_output("#{bin}/up log hello")
+    shell_output("#{bin}/up nope", 2)
   end
 end
