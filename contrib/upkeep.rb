@@ -4,8 +4,8 @@ class Upkeep < Formula
 
   desc "Run your update commands in parallel, on demand or on a catch-up schedule"
   homepage "https://github.com/wmxscott/upkeep"
-  url "https://github.com/wmxscott/upkeep/archive/refs/tags/v1.0.0.tar.gz"
-  sha256 "748a3acb43a8dfc60c554af78dc14473c2a5674ce0a78f3a50c23278393148b3"
+  url "https://github.com/wmxscott/upkeep/archive/refs/tags/v1.0.1.tar.gz"
+  sha256 "b81e380a3414c63e28f601ff24232280b5d0262c2d2fcabc7331b77ef322b4ac"
   license "MIT"
   head "https://github.com/wmxscott/upkeep.git", branch: "main"
 
