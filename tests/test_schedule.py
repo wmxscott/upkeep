@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import plistlib
 import stat
+from pathlib import Path
 
 import pytest
 
@@ -63,7 +64,7 @@ def test_launchd_bootstrap_failure_is_reported(env, state, fake_exec):
 
 
 def test_launchd_status(env, state, fake_exec):
-    out = "\tstate = not running\n\truns = 4\n\tlast exit code = 1\n\tother = x\n"
+    out = "svc = {\n\tstate = not running\n\truns = 4\n\tlast exit code = 1\n\tother = x\n}\n"
     run = fake_exec({"print": (0, out)})
     b = schedule.Launchd(env, state, run)
     assert b.status() == [("job", "not installed")]
@@ -74,6 +75,20 @@ def test_launchd_status(env, state, fake_exec):
     assert rows["loaded"] == "yes"
     assert rows["runs"] == "4" and rows["last exit code"] == "1"
     assert "other" not in rows
+
+
+def test_launchd_status_skips_nested_blocks(env, state, fake_exec):
+    out = (Path(__file__).parent / "fixtures/launchctl_print.txt").read_text()
+    b = schedule.Launchd(env, state, fake_exec({"print": (0, out)}))
+    b.plist.parent.mkdir(parents=True)
+    b.plist.write_text("x")
+    assert b.status() == [
+        ("file", str(b.plist)),
+        ("loaded", "yes"),
+        ("state", "running"),
+        ("runs", "2"),
+        ("last exit code", "0"),
+    ]
 
 
 def test_systemd_units(env, state):
@@ -107,6 +122,7 @@ def test_systemd_install_remove_status(env, state, fake_exec):
     b = schedule.Systemd(env, state, run)
     assert b.apply(b.install_plan(["/bin/sh", "-c", "x"])) == []
     assert b.installed()
+    assert [k for k, _ in b.status()] == ["files", "enabled", "active", "last tick", "next tick"]
     rows = dict(b.status())
     assert rows["enabled"] == "enabled" and rows["next tick"].endswith("10:00:00 UTC")
     b.apply(b.remove_plan())

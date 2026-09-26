@@ -177,10 +177,18 @@ class Launchd(Backend):
             rows.append(("loaded", "no"))
             return rows
         rows.append(("loaded", "yes"))
+        # Only the service's own fields; nested blocks such as coalitions have a `state` too.
+        depth = 0
         for line in proc.stdout.splitlines():
-            key, _, value = line.strip().partition(" = ")
-            if key in ("state", "runs", "last exit code"):
+            text = line.strip()
+            if text == "}":
+                depth -= 1
+                continue
+            key, _, value = text.partition(" = ")
+            if depth == 1 and key in ("state", "runs", "last exit code"):
                 rows.append((key, value))
+            if text.endswith("{"):
+                depth += 1
         return rows
 
 
