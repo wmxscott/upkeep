@@ -1,0 +1,76 @@
+gui/501/io.github.wmxscott.upkeep = {
+	active count = 1
+	path = /Users/me/Library/LaunchAgents/io.github.wmxscott.upkeep.plist
+	type = LaunchAgent
+	state = running
+
+	program = /bin/zsh
+	arguments = {
+		/bin/zsh
+		-lic
+		/opt/homebrew/bin/upkeep --auto
+	}
+
+	stdout path = /Users/me/.local/state/upkeep/schedule.log
+	stderr path = /Users/me/.local/state/upkeep/schedule.log
+	inherited environment = {
+		SSH_AUTH_SOCK => /var/run/com.apple.launchd.AbCdEf1234/Listeners
+	}
+
+	default environment = {
+		PATH => /usr/bin:/bin:/usr/sbin:/sbin
+	}
+
+	environment = {
+		OSLogRateLimit => 64
+		XDG_CONFIG_HOME => /Users/me/.config
+		XPC_SERVICE_NAME => io.github.wmxscott.upkeep
+	}
+
+	domain = gui/501 [100021]
+	asid = 100021
+	minimum runtime = 10
+	exit timeout = 5
+	runs = 2
+	pid = 63057
+	immediate reason = interval
+	forks = 120
+	execs = 3
+	initialized = 1
+	trampolined = 1
+	started suspended = 0
+	proxy started suspended = 0
+	checked allocations = 0 (queried = 1)
+	checked allocations reason = no host
+	checked allocations flags = 0x0
+	last exit code = 0
+
+	resource coalition = {
+		ID = 25951
+		type = resource
+		state = active
+		active count = 1
+		name = io.github.wmxscott.upkeep
+	}
+
+	jetsam coalition = {
+		ID = 25952
+		type = jetsam
+		state = active
+		active count = 1
+		name = io.github.wmxscott.upkeep
+	}
+
+	spawn type = daemon (3)
+	jetsam priority = 40
+	jetsam memory limit (active) = (unlimited)
+	jetsam memory limit (inactive) = (unlimited)
+	jetsamproperties category = daemon
+	jetsam thread limit = 32
+	cpumon = default
+	run interval = 3600 seconds
+	job state = running
+	sanitizer flags = 0x0
+
+	properties = runatload | inferred program
+}
